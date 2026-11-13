@@ -1,1 +1,0 @@
-# Practica_OTA_AI
