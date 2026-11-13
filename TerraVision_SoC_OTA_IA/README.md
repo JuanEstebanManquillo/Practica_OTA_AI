@@ -1,6 +1,6 @@
 # TerraVision IA — Entregable SoC: OTA + IA con SHT31
 
-Firmware para **ESP32-S3-WROOM-1-N16R8** (flash de 16 MB / PSRAM de 8 MB), realizado con **ESP-IDF 5.3.x**. Es una actualización del proyecto anterior que reemplaza el lector RS485/Modbus por un **sensor SHT31 de temperatura y humedad ambiental por I²C**. Se conservan OTA por HTTPS, rollback, servidor HTTPS, pruebas unitarias y documentación Doxygen.
+Firmware para **ESP32-S3-WROOM-1-N16R8** (flash de 16 MB / PSRAM de 8 MB), realizado con **ESP-IDF 5.3.x**. Se utiliza un **sensor SHT31 de temperatura y humedad ambiental por I²C**. Se conservan OTA por HTTPS, rollback, servidor HTTPS, pruebas unitarias y documentación Doxygen.
 
 **Alcance:** se atienden únicamente los requisitos **1) OTA** y **2) IA para gestión de dispositivos**. No contiene programación para cámara, e-paper, panel solar, GNSS, ESP-NOW o controles por gestos.
 
@@ -15,11 +15,9 @@ Firmware para **ESP32-S3-WROOM-1-N16R8** (flash de 16 MB / PSRAM de 8 MB), reali
 | Pruebas PC | Se incluyen pruebas de IA y CRC/conversión de la trama SHT31 |
 | Prueba en hardware | **Pendiente**: hay que compilar en ESP-IDF, cargar y ensayar con ESP32-S3 + SHT31 |
 
-**La IA usa un método de detección de anomalías estadístico basado en puntuación Z, no una red neuronal.** Las pruebas PC no demuestran automáticamente que se haya ensayado OTA o la lectura del sensor físico.
+**La IA usa un método de detección de anomalías estadístico basado en puntuación Z, no una red neuronal.** 
 
 ## 2. Cableado SHT31 a la PCB TerraVision
-
-La PCB TerraVision ya se diseñó con cámara OV5640, pero para esta práctica **no la utilizaremos**. Como alternativa temporal de acceso a GPIO libres, el conector **`J_CAM`** permite conectar el SHT31 por un bus I²C independiente del DS3231:
 
 | Terminal del SHT31 | Terminal del PCB `J_CAM` | ESP32-S3 |
 |---|---|---|
@@ -28,12 +26,10 @@ La PCB TerraVision ya se diseñó con cámara OV5640, pero para esta práctica *
 | **SDA** | **pin 2** | GPIO4 (`CAM_SDA`) |
 | **SCL** | **pin 1** | GPIO5 (`CAM_SCL`) |
 
-- **Verifique físicamente el pin 1 y la orientación de la cabecera J_CAM** contra la serigrafía y el esquemático antes de energizar. Una hilera 2×9 puede inducir errores si se invierte el conector.
-- Alimentación **3,3 V**, no conectar `VPROBE` de 5 V ni conectar la sonda a las bornas `RS485_A/B`.
 - El sensor SHT31 suele usar dirección `0x44`; si ADDR está conectado a 3V3 puede usar `0x45`. Editar `TV_SHT31_ADDRESS` en `main/tv_config.h`.
 - **SDA/SCL requieren pull-ups a 3V3**. Muchas placas breakout SHT31 ya los incluyen; compruebe su modelo. Para módulo sin ellos, agregar por ejemplo 4,7 kΩ de SDA a 3V3 y de SCL a 3V3 (longitudes cortas). El software habilita pull-ups internos, insuficientes como única garantía para un montaje largo.
-- No usar simultáneamente la cámara conectada a J_CAM. El RTC DS3231 está en otros pines (GPIO1/GPIO2), por lo que permanece independiente.
-- Este es un **cableado provisional de laboratorio**, no una modificación del esquemático ni un módulo SHT31 incorporado a la PCB.
+- El RTC DS3231 está en otros pines (GPIO1/GPIO2), por lo que permanece independiente.
+
 
 ## 3. Qué hace el programa
 
@@ -77,7 +73,6 @@ I (...) TERRAVISION: Medicion 0: T=... C HR=... % I2C=... ms salud=NORMAL
 
 Los números `...` son marcadores de ejemplo. No son lecturas obtenidas de un sensor real.
 
-Si no responde: comprobar 3V3/GND, SDA/SCL, orientación de los pines de `J_CAM`, dirección `0x44/0x45`, resistencias pull-up y conexiones físicas.
 
 ## 5. Demostrar OTA 1.0.0 → 2.0.0 (sin programación USB de v2)
 
@@ -132,11 +127,10 @@ TERRAVISION - SHT31 - FIRMWARE VERSION 2.0.0
 OTA: ACTUALIZACION OTA CONFIRMADA: firmware 2.0.0
 ```
 
-No presente estas líneas como observadas si aún no las capturó en su propio monitor.
 
 ### E. LED de comprobación (opcional)
 
-En tu PCB terminada **no hay LED de estado integrado**. Solo si **GPIO48 está físicamente accesible y no tiene otro uso**, conecte un LED convencional: `GPIO48 → resistencia de 330 Ω → ánodo del LED; cátodo → GND`. Active `#define TV_STATUS_LED_ENABLED 1` y recompílelo en v1 y v2. Parpadeo previsto: **v1 = un destello; v2 = dos destellos**. La evidencia por USB es suficiente si no hay GPIO48 disponible.
+Conecte un LED convencional: `GPIO48 → resistencia de 330 Ω → ánodo del LED; cátodo → GND`. Active `#define TV_STATUS_LED_ENABLED 1` y recompílelo en v1 y v2. Parpadeo previsto: **v1 = un destello; v2 = dos destellos**.
 
 ## 6. Comprobaciones locales de IA + CRC
 
